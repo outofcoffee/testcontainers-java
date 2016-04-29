@@ -32,7 +32,7 @@ public class SocketConfigurationStrategy implements DockerConfigurationStrategy 
 
     @Override
     public DockerClientConfig provideConfiguration() throws InvalidConfigurationException {
-        final DockerClientConfig config = new DockerClientConfig.DockerClientConfigBuilder().withUri(socketLocation).build();
+        final DockerClientConfig config = new DockerClientConfig.DockerClientConfigBuilder().withDockerHost(socketLocation).build();
         final DockerClient client = DockerClientBuilder.getInstance(config).build();
 
         try {

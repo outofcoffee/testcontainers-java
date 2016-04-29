@@ -75,8 +75,8 @@ public class DockerStatusTest {
                                                                       String startedAt, String finishedAt) {
 
         InspectContainerResponse.ContainerState state = Mockito.mock(InspectContainerResponse.ContainerState.class);
-        when(state.isRunning()).thenReturn(running);
-        when(state.isPaused()).thenReturn(paused);
+        when(state.getRunning()).thenReturn(running);
+        when(state.getPaused()).thenReturn(paused);
         when(state.getStartedAt()).thenReturn(startedAt);
         when(state.getFinishedAt()).thenReturn(finishedAt);
         return state;

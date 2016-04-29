@@ -1,15 +1,16 @@
 package org.testcontainers;
 
 import com.github.dockerjava.api.DockerClient;
-import com.github.dockerjava.api.InternalServerErrorException;
-import com.github.dockerjava.api.NotFoundException;
 import com.github.dockerjava.api.command.CreateContainerResponse;
+import com.github.dockerjava.api.exception.InternalServerErrorException;
+import com.github.dockerjava.api.exception.NotFoundException;
 import com.github.dockerjava.api.model.Frame;
 import com.github.dockerjava.api.model.Image;
 import com.github.dockerjava.core.DockerClientBuilder;
 import com.github.dockerjava.core.DockerClientConfig;
 import com.github.dockerjava.core.command.LogContainerResultCallback;
 import com.github.dockerjava.core.command.PullImageResultCallback;
+import com.github.dockerjava.core.command.WaitContainerResultCallback;
 import com.google.common.collect.Lists;
 import lombok.Synchronized;
 import org.slf4j.Logger;
@@ -36,17 +37,17 @@ public class DockerClientFactory {
 
     private static final List<DockerConfigurationStrategy> DEFAULT_CONFIGURATION_STRATEGIES =
             asList(
-                    // environment configuration should take precedence
-                    new EnvironmentAndSystemPropertyConfigurationStrategy(),
-
-                    // 'native' docker support, such as Docker for Mac and Docker for Windows
-                    new SocketConfigurationStrategy("http://localhost:2375", "docker native"),
-
-                    // TODO remove this strategy - docker.local removed as of docker version 1.11.0-beta9
-                    new SocketConfigurationStrategy("http://docker.local:2375", "docker.local"),
-
-                    // docker-machine support
-                    new DockerMachineConfigurationStrategy(),
+//                    // environment configuration should take precedence
+//                    new EnvironmentAndSystemPropertyConfigurationStrategy(),
+//
+//                    // 'native' docker support, such as Docker for Mac and Docker for Windows
+//                    new SocketConfigurationStrategy("http://localhost:2375", "docker native"),
+//
+//                    // TODO remove this strategy - docker.local removed as of docker version 1.11.0-beta9
+//                    new SocketConfigurationStrategy("http://docker.local:2375", "docker.local"),
+//
+//                    // docker-machine support
+//                    new DockerMachineConfigurationStrategy(),
 
                     // UNIX socket support
                     new SocketConfigurationStrategy("unix:///var/run/docker.sock", "local Unix")
@@ -171,9 +172,9 @@ public class DockerClientFactory {
 
         client.startContainerCmd(id).exec();
 
-        client.waitContainerCmd(id).exec();
+        client.waitContainerCmd(id).exec(new WaitContainerResultCallback());
 
-        LogContainerResultCallback callback = client.logContainerCmd(id).withStdOut().exec(new LogContainerCallback());
+        LogContainerResultCallback callback = client.logContainerCmd(id).withStdOut(true).exec(new LogContainerCallback());
         try {
             callback.awaitCompletion();
             String logResults = callback.toString();

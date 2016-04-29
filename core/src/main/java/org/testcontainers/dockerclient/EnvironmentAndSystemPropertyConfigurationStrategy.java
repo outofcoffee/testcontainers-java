@@ -36,13 +36,13 @@ public class EnvironmentAndSystemPropertyConfigurationStrategy implements Docker
     }
 
     private String stringRepresentation(DockerClientConfig config) {
-        return  "    uri=" + config.getUri() + "\n" +
-                "    sslConfig='" + config.getSslConfig() + "'\n" +
-                "    version='" + config.getVersion() + "'\n" +
-                "    username='" + config.getUsername() + "'\n" +
-                "    password='" + config.getPassword() + "'\n" +
-                "    email='" + config.getEmail() + "'\n" +
-                "    serverAddress='" + config.getServerAddress() + "'\n" +
-                "    dockerCfgPath='" + config.getDockerCfgPath() + "'\n";
+        return  "    uri=" + config.getDockerHost() + "\n" +
+                "    sslConfig='" + config.getDockerTlsVerify() + "'\n" +
+                "    version='" + config.getApiVersion() + "'\n" +
+                "    username='" + config.getAuthConfigurations().getConfigs().get(0).getUsername() + "'\n" +
+                "    password='" + config.getAuthConfigurations().getConfigs().get(0).getPassword() + "'\n" +
+                "    email='" + config.getAuthConfigurations().getConfigs().get(0).getEmail() + "'\n" +
+                "    serverAddress='" + config.getRegistryUrl() + "'\n" +
+                "    dockerCfgPath='" + config.getDockerCertPath() + "'\n";
     }
 }
