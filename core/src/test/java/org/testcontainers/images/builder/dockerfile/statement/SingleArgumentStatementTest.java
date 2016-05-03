@@ -11,6 +11,6 @@ public class SingleArgumentStatementTest extends AbstractStatementTest {
 
     @Test
     public void multilineTest() throws Exception {
-        assertStatement(new SingleArgumentStatement("TEST", "hello\nworld"));
+        assertStatement(new SingleArgumentStatement("TEST", "hello" + System.lineSeparator() + "world"));
     }
 }

@@ -3,6 +3,7 @@ package org.testcontainers.dockerclient;
 import com.github.dockerjava.api.DockerClient;
 import com.github.dockerjava.core.DockerClientBuilder;
 import com.github.dockerjava.core.DockerClientConfig;
+import org.jetbrains.annotations.Nullable;
 
 /**
  * Attempt to configure docker using a socket.
@@ -17,16 +18,32 @@ public class SocketConfigurationStrategy implements DockerConfigurationStrategy 
     private final String socketLocation;
 
     /**
+     * Explicitly set the docker host.
+     */
+    @Nullable
+    private final String dockerHostOverride;
+
+    /**
      * Human readable description of the socket.
      */
     private final String socketDescription;
 
     /**
-     * @param socketLocation    the location of the socket, such as {@literal http://path/to/socket}
      * @param socketDescription the human readable description of the socket
+     * @param socketLocation    the location of the socket, such as {@literal http://path/to/socket}
      */
-    public SocketConfigurationStrategy(String socketLocation, String socketDescription) {
+    public SocketConfigurationStrategy(String socketDescription, String socketLocation) {
+        this(socketDescription, socketLocation, null);
+    }
+
+    /**
+     * @param socketDescription  the human readable description of the socket
+     * @param socketLocation     the location of the socket, such as {@literal http://path/to/socket}
+     * @param dockerHostOverride explicitly set the docker host
+     */
+    public SocketConfigurationStrategy(String socketDescription, String socketLocation, @Nullable String dockerHostOverride) {
         this.socketLocation = socketLocation;
+        this.dockerHostOverride = dockerHostOverride;
         this.socketDescription = socketDescription;
     }
 
@@ -48,5 +65,16 @@ public class SocketConfigurationStrategy implements DockerConfigurationStrategy 
     @Override
     public String getDescription() {
         return socketDescription + " socket (" + socketLocation + ")";
+    }
+
+    /**
+     * Return the host of the configured docker instance, or {@link #dockerHostOverride}, if non-{@code null}.
+     *
+     * @param config the active configuration
+     * @return the docker host
+     */
+    @Override
+    public String getDockerHostAddress(DockerClientConfig config) {
+        return (null != dockerHostOverride ? dockerHostOverride : DockerConfigurationStrategy.super.getDockerHostAddress(config));
     }
 }

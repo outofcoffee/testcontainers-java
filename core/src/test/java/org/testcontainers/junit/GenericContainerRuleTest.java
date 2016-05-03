@@ -6,10 +6,7 @@ import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoDatabase;
 import com.rabbitmq.client.*;
 import org.bson.Document;
-import org.junit.BeforeClass;
-import org.junit.ClassRule;
-import org.junit.Ignore;
-import org.junit.Test;
+import org.junit.*;
 import org.rnorth.ducttape.RetryCountExceededException;
 import org.rnorth.ducttape.unreliables.Unreliables;
 import org.testcontainers.containers.GenericContainer;
@@ -185,6 +182,9 @@ public class GenericContainerRuleTest {
     public void customClasspathResourceMappingTest() throws IOException {
         // Note: This functionality doesn't work if you are running your build inside a Docker container;
         // in that case this test will fail.
+
+        // also fails on Windows, as docker binds the test file as a directory, instead of a file :-/
+        Assume.assumeTrue("This test is not applicable to Windows", !System.getProperty("os.name").toLowerCase().contains("windows"));
 
         BufferedReader br = Unreliables.retryUntilSuccess(10, TimeUnit.SECONDS, () -> {
             Uninterruptibles.sleepUninterruptibly(1, TimeUnit.SECONDS);

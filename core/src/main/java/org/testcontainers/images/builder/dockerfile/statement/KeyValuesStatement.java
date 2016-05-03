@@ -36,7 +36,7 @@ public class KeyValuesStatement extends Statement {
             }
 
             if (iterator.hasNext()) {
-                dockerfileStringBuilder.append(" \\\n\t");
+                dockerfileStringBuilder.append(" \\" + System.lineSeparator() + "\t");
             }
         }
     }

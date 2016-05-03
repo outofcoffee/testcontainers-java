@@ -11,6 +11,6 @@ public class SingleArgumentStatement extends Statement {
 
     @Override
     public void appendArguments(StringBuilder dockerfileStringBuilder) {
-        dockerfileStringBuilder.append(argument.replace("\n", "\\\n"));
+        dockerfileStringBuilder.append(argument.replace(System.lineSeparator(), "\\" + System.lineSeparator()));
     }
 }

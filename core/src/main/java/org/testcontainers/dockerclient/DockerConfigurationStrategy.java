@@ -31,13 +31,13 @@ public interface DockerConfigurationStrategy {
      *
      * @return a working DockerClientConfig, as determined by successful execution of a ping command
      */
-    static DockerClientConfig getFirstValidConfig(List<DockerConfigurationStrategy> strategies) {
+    static DockerClientConfigResult getFirstValidConfig(List<DockerConfigurationStrategy> strategies) {
         Map<DockerConfigurationStrategy, Exception> configurationFailures = new LinkedHashMap<>();
 
         for (DockerConfigurationStrategy strategy : strategies) {
             try {
                 LOGGER.info("Looking for Docker environment. Trying {}", strategy.getDescription());
-                return strategy.provideConfiguration();
+                return new DockerClientConfigResult(strategy);
             } catch (Exception e) {
                 configurationFailures.put(strategy, e);
                 LOGGER.debug("Docker strategy " + strategy.getClass().getName() + " failed with exception", e);
@@ -53,6 +53,22 @@ public interface DockerConfigurationStrategy {
         throw new IllegalStateException("Could not find a valid Docker environment. Please see logs and check configuration");
     }
 
+    /**
+     * @param config the active configuration
+     * @return the host address for the configured docker instance
+     */
+    default String getDockerHostAddress(DockerClientConfig config) {
+        switch (config.getDockerHost().getScheme()) {
+            case "http":
+            case "https":
+            case "tcp":
+                return config.getDockerHost().getHost();
+            case "unix":
+                return "localhost";
+            default:
+                return null;
+        }
+    }
 
     class InvalidConfigurationException extends RuntimeException {
 
@@ -62,6 +78,27 @@ public interface DockerConfigurationStrategy {
 
         public InvalidConfigurationException(String message, Throwable cause) {
             super(message, cause);
+        }
+    }
+
+    /**
+     * Represents a successful configuration result.
+     */
+    class DockerClientConfigResult {
+        private final DockerClientConfig config;
+        private final DockerConfigurationStrategy strategy;
+
+        DockerClientConfigResult(DockerConfigurationStrategy strategy) {
+            this.config = strategy.provideConfiguration();
+            this.strategy = strategy;
+        }
+
+        public DockerClientConfig getConfig() {
+            return config;
+        }
+
+        public DockerConfigurationStrategy getStrategy() {
+            return strategy;
         }
     }
 }

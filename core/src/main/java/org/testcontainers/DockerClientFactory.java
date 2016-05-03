@@ -32,8 +32,16 @@ public class DockerClientFactory {
     private static DockerClientFactory instance;
     private static final Logger LOGGER = getLogger(DockerClientFactory.class);
 
-    // Cached client configuration
+    /**
+     * Cached client configuration.
+     */
     private DockerClientConfig config;
+
+    /**
+     * The strategy used to configure the client.
+     */
+    private DockerConfigurationStrategy configStrategy;
+
     private boolean preconditionsChecked = false;
 
     /**
@@ -47,10 +55,10 @@ public class DockerClientFactory {
             new ProxiedUnixSocketConfigurationStrategy(),
 
             // 'native' docker support for Docker for Windows (version >= 1.11 beta9)
-            new SocketConfigurationStrategy("tcp://localhost:2375", "Docker for Windows HTTP"),
+            new SocketConfigurationStrategy("Docker for Windows HTTP", "tcp://localhost:2375", "docker"),
 
             // UNIX socket support
-            new SocketConfigurationStrategy("unix:///var/run/docker.sock", "UNIX domain"),
+            new SocketConfigurationStrategy("UNIX domain", "unix:///var/run/docker.sock"),
 
             // Default docker-machine support
             new DockerMachineConfigurationStrategy()
@@ -94,8 +102,12 @@ public class DockerClientFactory {
      */
     @Synchronized
     public DockerClient client(boolean failFast) {
-        if (config == null) {
-            config = DockerConfigurationStrategy.getFirstValidConfig(configurationStrategies);
+        if (null == config) {
+            final DockerConfigurationStrategy.DockerClientConfigResult configResult =
+                    DockerConfigurationStrategy.getFirstValidConfig(configurationStrategies);
+
+            config = configResult.getConfig();
+            configStrategy = configResult.getStrategy();
         }
 
         DockerCmdExecFactoryImpl nettyExecFactory = new DockerCmdExecFactoryImpl();
@@ -212,6 +224,10 @@ public class DockerClientFactory {
 
             }
         }
+    }
+
+    public String getDockerHostAddress(DockerClientConfig config) {
+        return configStrategy.getDockerHostAddress(config);
     }
 
     private static class NotEnoughDiskSpaceException extends RuntimeException {

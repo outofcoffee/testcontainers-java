@@ -521,7 +521,7 @@ public class GenericContainer<SELF extends GenericContainer<SELF>>
         if (resource == null) {
             throw new IllegalArgumentException("Could not find classpath resource at provided path: " + resourcePath);
         }
-        String resourceFilePath = resource.getFile();
+        final String resourceFilePath = PathOperations.formatForCurrentEnvironment(resource.getPath());
 
         this.addFileSystemBind(resourceFilePath, containerPath, mode);
 

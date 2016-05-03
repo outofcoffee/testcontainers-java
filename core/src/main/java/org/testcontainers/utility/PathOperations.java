@@ -8,11 +8,18 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.SimpleFileVisitor;
 import java.nio.file.attribute.BasicFileAttributes;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /**
  * Filesystem operation utility methods.
  */
 public class PathOperations {
+    /**
+     * Example:
+     * <pre>/C:/Users/Pete/projects/testcontainers-java/test-resource.txt</pre>
+     */
+    private static final Pattern WINDOWS_BINDMOUNT_PATTERN = Pattern.compile("(\\/[a-zA-Z]):(\\/.*)");
 
     /**
      * Recursively delete a directory and all its subdirectories and files.
@@ -46,6 +53,30 @@ public class PathOperations {
         boolean result = directory.toFile().mkdirs();
         if (!result) {
             throw new IllegalStateException("Failed to create directory at: " + directory);
+        }
+    }
+
+    /**
+     * Formats the host side of a bindmount spec, allowing for different OS behaviour.
+     * <p>
+     *     See https://docs.docker.com/engine/userguide/containers/dockervolumes/#mount-a-host-directory-as-a-data-volume
+     * </p>
+     * Example:
+     * <pre>/C:/Users/Pete/projects/testcontainers-java/test-resource.txt</pre>
+     * becomes:
+     * <pre>/c/Users/Pete/projects/testcontainers-java/test-resource.txt</pre>
+     *
+     * @param path the host side of a bindmount spec
+     * @return correctly formatted spec fragment
+     */
+    public static String formatForCurrentEnvironment(String path) {
+        final Matcher matcher = WINDOWS_BINDMOUNT_PATTERN.matcher(path);
+
+        if (!matcher.matches()) {
+            // short-circuit
+            return path;
+        } else {
+            return matcher.group(1).toLowerCase() + matcher.group(2);
         }
     }
 }

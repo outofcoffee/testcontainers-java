@@ -16,7 +16,7 @@ public class HttpWaitStrategyTest extends AbstractWaitStrategyTest<HttpWaitStrat
     /**
      * Doubly-escaped newline sequence indicating end of the HTTP header.
      */
-    private static final String DOUBLE_NEWLINE = "\\\r\\\n\\\r\\\n";
+    private static final String DOUBLE_NEWLINE = "\\r\\n\\r\\n";
 
     /**
      * Expects that the WaitStrategy returns successfully after receiving an HTTP 200 response from the container.
