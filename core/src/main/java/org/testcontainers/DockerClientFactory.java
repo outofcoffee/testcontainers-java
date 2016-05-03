@@ -12,6 +12,7 @@ import com.github.dockerjava.core.command.LogContainerResultCallback;
 import com.github.dockerjava.core.command.PullImageResultCallback;
 import com.github.dockerjava.core.command.WaitContainerResultCallback;
 import com.github.dockerjava.netty.DockerCmdExecFactoryImpl;
+import com.google.common.collect.Lists;
 import lombok.Synchronized;
 import org.slf4j.Logger;
 import org.testcontainers.dockerclient.*;
@@ -35,17 +36,36 @@ public class DockerClientFactory {
     private DockerClientConfig config;
     private boolean preconditionsChecked = false;
 
-    private static final List<DockerConfigurationStrategy> CONFIGURATION_STRATEGIES =
-            asList(new EnvironmentAndSystemPropertyConfigurationStrategy(),
-                    new ProxiedUnixSocketConfigurationStrategy(),
-                    new UnixSocketConfigurationStrategy(),
-                    new DockerMachineConfigurationStrategy());
+    /**
+     * The default list of configuration strategies.
+     */
+    private static final List<DockerConfigurationStrategy> DEFAULT_CONFIGURATION_STRATEGIES = asList(
+            // environment variables take precedence
+            new EnvironmentAndSystemPropertyConfigurationStrategy(),
+
+            // UNIX socket support on OS X
+            new ProxiedUnixSocketConfigurationStrategy(),
+
+            // 'native' docker support for Docker for Windows (version >= 1.11 beta9)
+            new SocketConfigurationStrategy("tcp://localhost:2375", "Docker for Windows HTTP"),
+
+            // UNIX socket support
+            new SocketConfigurationStrategy("unix:///var/run/docker.sock", "UNIX domain"),
+
+            // Default docker-machine support
+            new DockerMachineConfigurationStrategy()
+    );
+
+    /**
+     * The ordered configuration strategies for this factory instance.
+     */
+    private final List<DockerConfigurationStrategy> configurationStrategies =
+            Lists.newArrayList(DEFAULT_CONFIGURATION_STRATEGIES);
 
     /**
      * Private constructor
      */
     private DockerClientFactory() {
-
     }
 
     /**
@@ -62,7 +82,6 @@ public class DockerClientFactory {
     }
 
     /**
-     *
      * @return a new initialized Docker client
      */
     public DockerClient client() {
@@ -70,14 +89,13 @@ public class DockerClientFactory {
     }
 
     /**
-     *
      * @param failFast fail if client fails to ping Docker daemon
      * @return a new initialized Docker client
      */
     @Synchronized
     public DockerClient client(boolean failFast) {
         if (config == null) {
-            config = DockerConfigurationStrategy.getFirstValidConfig(CONFIGURATION_STRATEGIES);
+            config = DockerConfigurationStrategy.getFirstValidConfig(configurationStrategies);
         }
 
         DockerCmdExecFactoryImpl nettyExecFactory = new DockerCmdExecFactoryImpl();
@@ -113,6 +131,15 @@ public class DockerClientFactory {
         return dockerHostIpAddress(config);
     }
 
+    /**
+     * Add a configuration strategy to the top of the list (called first).
+     *
+     * @param strategy the configuration strategy
+     */
+    public void addConfigurationStrategy(DockerConfigurationStrategy strategy) {
+        configurationStrategies.add(0, strategy);
+    }
+
     private void checkVersion(String version) {
         String[] splitVersion = version.split("\\.");
         if (Integer.valueOf(splitVersion[0]) <= 1 && Integer.valueOf(splitVersion[1]) < 6) {
@@ -132,6 +159,7 @@ public class DockerClientFactory {
 
     /**
      * Check whether this docker installation is likely to have disk space problems
+     *
      * @param client an active Docker client
      */
     private void checkDiskSpace(DockerClient client) {
